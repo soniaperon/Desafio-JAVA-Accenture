@@ -1,0 +1,21 @@
+//cadastrar aluno Post /api/alunos
+{
+    "nome": "João Silva",
+    "email": "joao.silva@example.com",
+    "dataCadastro": "2024-11-14"
+}
+
+
+//cadastrar curso
+
+{
+    "nome": "Java Básico",
+    "descricao": "Curso de introdução ao Java",
+    "dataCriacao": "2023-11-22"
+}
+
+Inscrever aluno em curso: POST /api/inscricoes?alunoId=1&cursoId=1
+
+Listar cursos de um aluno: GET /api/alunos/{alunoId}/cursos
+
+Listar alunos de um curso: GET /api/cursos/{cursoId}/alunos
