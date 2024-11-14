@@ -1,0 +1,31 @@
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/alunos")
+public class AlunoController {
+
+    @Autowired
+    private AlunoRepository alunoRepository;
+
+    // Cadastrar aluno
+    @PostMapping
+    public Aluno cadastrarAluno(@RequestBody Aluno aluno) {
+        return alunoRepository.save(aluno);
+    }
+
+    // Listar alunos
+    @GetMapping
+    public List<Aluno> listarAlunos() {
+        return alunoRepository.findAll();
+    }
+
+    // Listar cursos de um aluno
+    @GetMapping("/{alunoId}/cursos")
+    public List<Curso> listarCursosAluno(@PathVariable Long alunoId) {
+        Aluno aluno = alunoRepository.findById(alunoId).orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+        return aluno.getCursos();
+    }
+}
