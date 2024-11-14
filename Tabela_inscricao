@@ -1,0 +1,343 @@
+//3. Tabela Inscrição: Representa a inscrição dos alunos nos cursos. A tabela deve conter os seguintes campos: o id (Chave primária, auto-gerado) 
+//o aluno_id (Chave estrangeira para a tabela Aluno) o curso_id (Chave estrangeira para a tabela Curso) o dataInscricao (Data)
+
+
+import jakarta.persistence.*;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Scanner;
+
+@Entity
+@Table(name = "aluno")
+class Aluno {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String nome;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Temporal(TemporalType.DATE)
+    @Column(name = "data_cadastro", nullable = false)
+    private Date dataCadastro;
+
+    public Aluno() {
+    }
+
+    public Aluno(String nome, String email, Date dataCadastro) {
+        this.nome = nome;
+        this.email = email;
+        this.dataCadastro = dataCadastro;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Date getDataCadastro() {
+        return dataCadastro;
+    }
+
+    public void setDataCadastro(Date dataCadastro) {
+        this.dataCadastro = dataCadastro;
+    }
+
+    @Override
+    public String toString() {
+        return "Aluno{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", email='" + email + '\'' +
+                ", dataCadastro=" + dataCadastro +
+                '}';
+    }
+}
+
+@Entity
+@Table(name = "curso")
+class Curso {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String nome;
+
+    @Column(nullable = false)
+    private String descricao;
+
+    @Temporal(TemporalType.DATE)
+    @Column(name = "data_criacao", nullable = false)
+    private Date dataCriacao;
+
+    public Curso() {
+    }
+
+    public Curso(String nome, String descricao, Date dataCriacao) {
+        this.nome = nome;
+        this.descricao = descricao;
+        this.dataCriacao = dataCriacao;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public Date getDataCriacao() {
+        return dataCriacao;
+    }
+
+    public void setDataCriacao(Date dataCriacao) {
+        this.dataCriacao = dataCriacao;
+    }
+
+    @Override
+    public String toString() {
+        return "Curso{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                ", descricao='" + descricao + '\'' +
+                ", dataCriacao=" + dataCriacao +
+                '}';
+    }
+}
+
+@Entity
+@Table(name = "inscricao")
+class Inscricao {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "aluno_id", nullable = false)
+    private Aluno aluno;
+
+    @ManyToOne
+    @JoinColumn(name = "curso_id", nullable = false)
+    private Curso curso;
+
+    @Temporal(TemporalType.DATE)
+    @Column(name = "data_inscricao", nullable = false)
+    private Date dataInscricao;
+
+    public Inscricao() {
+    }
+
+    public Inscricao(Aluno aluno, Curso curso, Date dataInscricao) {
+        this.aluno = aluno;
+        this.curso = curso;
+        this.dataInscricao = dataInscricao;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Aluno getAluno() {
+        return aluno;
+    }
+
+    public void setAluno(Aluno aluno) {
+        this.aluno = aluno;
+    }
+
+    public Curso getCurso() {
+        return curso;
+    }
+
+    public void setCurso(Curso curso) {
+        this.curso = curso;
+    }
+
+    public Date getDataInscricao() {
+        return dataInscricao;
+    }
+
+    public void setDataInscricao(Date dataInscricao) {
+        this.dataInscricao = dataInscricao;
+    }
+
+    @Override
+    public String toString() {
+        return "Inscricao{" +
+                "id=" + id +
+                ", aluno=" + aluno.getNome() +
+                ", curso=" + curso.getNome() +
+                ", dataInscricao=" + dataInscricao +
+                '}';
+    }
+}
+
+public class Main {
+    private static SessionFactory sessionFactory;
+
+    public static void main(String[] args) {
+        // Configuração do Hibernate
+        try {
+            sessionFactory = new Configuration()
+                    .configure("hibernate.cfg.xml")
+                    .addAnnotatedClass(Aluno.class)
+                    .addAnnotatedClass(Curso.class)
+                    .addAnnotatedClass(Inscricao.class)
+                    .buildSessionFactory();
+        } catch (Throwable ex) {
+            System.err.println("Falha na criação do SessionFactory." + ex);
+            throw new ExceptionInInitializerError(ex);
+        }
+
+        Scanner scanner = new Scanner(System.in);
+        int opcao;
+
+        do {
+            System.out.println("\n=== Gerenciamento de Plataforma de Cursos ===");
+            System.out.println("1. Cadastrar aluno");
+            System.out.println("2. Listar alunos");
+            System.out.println("3. Cadastrar curso");
+            System.out.println("4. Listar cursos");
+            System.out.println("5. Realizar inscrição");
+            System.out.println("6. Listar inscrições");
+            System.out.println("7. Sair");
+            System.out.print("Escolha uma opção: ");
+            opcao = scanner.nextInt();
+            scanner.nextLine(); // Consumir a quebra de linha
+
+            switch (opcao) {
+                case 1 -> cadastrarAluno(scanner);
+                case 2 -> listarAlunos();
+                case 3 -> cadastrarCurso(scanner);
+                case 4 -> listarCursos();
+                case 5 -> realizarInscricao(scanner);
+                case 6 -> listarInscricoes();
+                case 7 -> System.out.println("Encerrando o sistema...");
+                default -> System.out.println("Opção inválida!");
+            }
+        } while (opcao != 7);
+
+        sessionFactory.close();
+    }
+
+    private static void cadastrarAluno(Scanner scanner) {
+        System.out.println("\n=== Cadastro de Aluno ===");
+        System.out.print("Nome: ");
+        String nome = scanner.nextLine();
+        System.out.print("E-mail: ");
+        String email = scanner.nextLine();
+        Date dataCadastro = new Date();
+
+        Aluno aluno = new Aluno(nome, email, dataCadastro);
+
+        executeTransaction(session -> session.save(aluno), "Aluno cadastrado com sucesso!");
+    }
+
+    private static void listarAlunos() {
+        System.out.println("\n=== Lista de Alunos ===");
+        executeQuery(session -> {
+            List<Aluno> alunos = session.createQuery("from Aluno", Aluno.class).list();
+            alunos.forEach(System.out::println);
+        });
+    }
+
+    private static void cadastrarCurso(Scanner scanner) {
+        System.out.println("\n=== Cadastro de Curso ===");
+        System.out.print("Nome: ");
+        String nome = scanner.nextLine();
+        System.out.print("Descrição: ");
+        String descricao = scanner.nextLine();
+        Date dataCriacao = new Date();
+
+        Curso curso = new Curso(nome, descricao, dataCriacao);
+
+        executeTransaction(session -> session.save(curso), "Curso cadastrado com sucesso!");
+    }
+
+    private static void listarCursos() {
+        System.out.println("\n=== Lista de Cursos ===");
+        executeQuery(session -> {
+            List<Curso> cursos = session.createQuery("from Curso", Curso.class).list();
+            cursos.forEach(System.out::println);
+        });
+    }
+
+    private static void realizarInscricao(Scanner scanner) {
+        System.out.println("\n=== Realizar Inscrição ===");
+        listarAlunos();
+        System.out.print("ID do aluno: ");
+        Long alunoId = scanner.nextLong();
+        listarCursos();
+        System.out.print("ID do curso: ");
+        Long cursoId = scanner.nextLong();
+
+        executeTransaction(session -> {
+            Aluno aluno = session.get(Aluno.class, alunoId);
+            Curso curso = session.get(Curso.class, cursoId);
+
+            if (aluno != null && curso != null) {
+                Inscricao inscricao = new Inscricao(aluno, curso, new Date());
+                session.save(inscricao);
+                System.out.println("Inscrição realizada com sucesso!");
+            } else {
+                System.out.println("Aluno ou curso inválido.");
+            }
+        });
+    }
+
+    private static void listarInscricoes() {
+        System.out.println("\n=== Lista de Inscrições ===");
+        executeQuery(session -> {
+            List<Inscricao> inscricoes = session.createQuery("from Inscricao", Inscricao.class).list();
+            inscricoes.forEach(System.out::println);
+        });
+    }
+
+    private static void executeTransaction(TransactionAction action, String successMessage) {
+        Session session = sessionFactory.openSession();
+        Transaction transaction = null;
+
+        try {
+            transaction = session.beginTransaction();
+            action.execute(session);
+            transaction.commit();
+            System.out.println(successMessage);
+        } catch (Exception e) {
+            if (transaction != null) transaction
