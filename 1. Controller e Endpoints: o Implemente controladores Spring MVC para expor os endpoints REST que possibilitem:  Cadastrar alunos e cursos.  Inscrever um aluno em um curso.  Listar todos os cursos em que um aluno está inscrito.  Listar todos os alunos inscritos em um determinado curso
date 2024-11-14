@@ -1,0 +1,24 @@
+import javax.persistence.*;
+import java.util.Date;
+import java.util.List;
+
+@Entity
+@Table(name = "curso")
+public class Curso {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String nome;
+    private String descricao;
+
+    @Temporal(TemporalType.DATE)
+    @Column(name = "data_criacao")
+    private Date dataCriacao;
+
+    @ManyToMany(mappedBy = "cursos")
+    private List<Aluno> alunos;
+
+    // Getters e Setters
+}
