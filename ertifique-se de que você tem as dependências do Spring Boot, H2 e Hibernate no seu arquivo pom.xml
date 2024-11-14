@@ -1,0 +1,172 @@
+//Adicione as dependências necessárias no pom.xml: 
+//Certifique-se de que você tem as dependências do Spring Boot, H2 e Hibernate no seu arquivo pom.xml
+
+//XML
+<dependencies>
+    <!-- Dependência do Spring Boot Starter Web -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- Dependência do Spring Boot Starter Data JPA -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <!-- Dependência do H2 Database -->
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <scope>runtime</scope>
+    </dependency>
+
+    <!-- Dependência do Spring Boot Starter Test para testes (opcional) -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+
+//Configuração h2
+
+# Configuração do banco de dados H2
+spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+
+# Dialeto do Hibernate para H2
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+
+# Configuração do Hibernate
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# H2 Console para acesso ao banco via navegador (opcional)
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+//java 
+//Classes de Entidade (JPA)
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "aluno")
+public class Aluno {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String nome;
+    private String email;
+
+    // Construtores, getters, setters
+    public Aluno() {}
+    public Aluno(String nome, String email) {
+        this.nome = nome;
+        this.email = email;
+    }
+
+    // Getters e setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+}
+
+@Entity
+@Table(name = "curso")
+public class Curso {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String nome;
+    private String descricao;
+
+    // Construtores, getters, setters
+    public Curso() {}
+    public Curso(String nome, String descricao) {
+        this.nome = nome;
+        this.descricao = descricao;
+    }
+
+    // Getters e setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
+}
+
+@Entity
+@Table(name = "inscricao")
+public class Inscricao {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "aluno_id", nullable = false)
+    private Aluno aluno;
+
+    @ManyToOne
+    @JoinColumn(name = "curso_id", nullable = false)
+    private Curso curso;
+
+    // Construtores, getters, setters
+    public Inscricao() {}
+    public Inscricao(Aluno aluno, Curso curso) {
+        this.aluno = aluno;
+        this.curso = curso;
+    }
+
+    // Getters e setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Aluno getAluno() { return aluno; }
+    public void setAluno(Aluno aluno) { this.aluno = aluno; }
+    public Curso getCurso() { return curso; }
+    public void setCurso(Curso curso) { this.curso = curso; }
+}
+
+//Criação do repositório
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AlunoRepository extends JpaRepository<Aluno, Long> {}
+
+public interface CursoRepository extends JpaRepository<Curso, Long> {}
+
+public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {}
+
+//Aluno controller
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/alunos")
+public class AlunoController {
+
+    @Autowired
+    private AlunoRepository alunoRepository;
+
+    // Endpoint para cadastrar um aluno
+    @PostMapping
+    public Aluno cadastrarAluno(@RequestBody Aluno aluno) {
+        return alunoRepository.save(aluno); // Salva o aluno no banco
+    }
+
+    // Endpoint para listar todos os alunos
+    @GetMapping
+    public List<Aluno> listarAlunos() {
+        return alunoRepository.findAll(); // Retorna todos os alunos do banco
+    }
+}
