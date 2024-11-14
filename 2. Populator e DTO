@@ -1,0 +1,142 @@
+//2. Populator e DTO: o Crie um InscricaoPopulator para converter as entidades Aluno e Curso para DTOs
+//(AlunoDTO, CursoDTO). o Utilize os DTOs no Controller, evitando expor as entidades diretamente.
+
+//Aluno DTO
+
+public class AlunoDTO {
+    private Long id;
+    private String nome;
+    private String email;
+
+    public AlunoDTO(Long id, String nome, String email) {
+        this.id = id;
+        this.nome = nome;
+        this.email = email;
+    }
+
+    // Getters and Setters
+}
+
+
+//CursoDTO
+
+public class CursoDTO {
+    private Long id;
+    private String nome;
+    private String descricao;
+
+    public CursoDTO(Long id, String nome, String descricao) {
+        this.id = id;
+        this.nome = nome;
+        this.descricao = descricao;
+    }
+
+    // Getters and Setters
+}
+
+//Criar Inscrição Popular
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class InscricaoPopulator {
+
+    public static AlunoDTO toAlunoDTO(Aluno aluno) {
+        return new AlunoDTO(aluno.getId(), aluno.getNome(), aluno.getEmail());
+    }
+
+    public static CursoDTO toCursoDTO(Curso curso) {
+        return new CursoDTO(curso.getId(), curso.getNome(), curso.getDescricao());
+    }
+
+    public static List<AlunoDTO> toAlunoDTOList(List<Aluno> alunos) {
+        return alunos.stream()
+                .map(InscricaoPopulator::toAlunoDTO)
+                .collect(Collectors.toList());
+    }
+
+    public static List<CursoDTO> toCursoDTOList(List<Curso> cursos) {
+        return cursos.stream()
+                .map(InscricaoPopulator::toCursoDTO)
+                .collect(Collectors.toList());
+    }
+}
+
+//Aluno Controller Com DTOS
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/alunos")
+public class AlunoController {
+
+    @Autowired
+    private AlunoRepository alunoRepository;
+
+    @PostMapping
+    public AlunoDTO cadastrarAluno(@RequestBody Aluno aluno) {
+        Aluno savedAluno = alunoRepository.save(aluno);
+        return new AlunoDTO(savedAluno.getId(), savedAluno.getNome(), savedAluno.getEmail());
+    }
+
+    @GetMapping("/{id}/cursos")
+    public List<CursoDTO> listarCursosAluno(@PathVariable Long id) {
+        Aluno aluno = alunoRepository.findById(id).orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+        return InscricaoPopulator.toCursoDTOList(aluno.getCursos());
+    }
+}
+
+//Curso controller com DTOS
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/cursos")
+public class CursoController {
+
+    @Autowired
+    private CursoRepository cursoRepository;
+
+    @PostMapping
+    public CursoDTO cadastrarCurso(@RequestBody Curso curso) {
+        Curso savedCurso = cursoRepository.save(curso);
+        return new CursoDTO(savedCurso.getId(), savedCurso.getNome(), savedCurso.getDescricao());
+    }
+
+    @GetMapping("/{id}/alunos")
+    public List<AlunoDTO> listarAlunosCurso(@PathVariable Long id) {
+        Curso curso = cursoRepository.findById(id).orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+        return InscricaoPopulator.toAlunoDTOList(curso.getAlunos());
+    }
+}
+//Inscrição controller DTOS
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/inscricoes")
+public class InscricaoController {
+
+    @Autowired
+    private AlunoRepository alunoRepository;
+
+    @Autowired
+    private CursoRepository cursoRepository;
+
+    @PostMapping
+    public String inscreverAlunoEmCurso(@RequestParam Long alunoId, @RequestParam Long cursoId) {
+        Aluno aluno = alunoRepository.findById(alunoId).orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+        Curso curso = cursoRepository.findById(cursoId).orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+
+        aluno.getCursos().add(curso);
+        alunoRepository.save(aluno);
+
+        return "Inscrição realizada com sucesso!";
+    }
+}
